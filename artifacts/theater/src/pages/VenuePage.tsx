@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useGetVenue, useBuyWatchPartyTicket, useVerifyGuestStream, getGetVenueQueryKey } from "@workspace/api-client-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -7,8 +7,8 @@ import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, AlertCircle, Calendar, Clock, MapPin, User as UserIcon, PlayCircle } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2, AlertCircle, ArrowLeft, Calendar, Clock, MapPin, User as UserIcon, PlayCircle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 const purchaseSchema = z.object({
@@ -122,6 +122,13 @@ export default function VenuePage() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-primary/10 via-background to-background pointer-events-none" />
 
       <div className="w-full max-w-4xl z-10 space-y-12">
+        <Link href="/">
+          <Button variant="ghost" className="text-muted-foreground hover:text-primary -ml-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Lobby
+          </Button>
+        </Link>
+
         {/* SECTION A - Venue Header */}
         <div className="text-center space-y-4">
           <p className="text-primary tracking-[0.2em] text-sm font-bold uppercase">Watch Party</p>
