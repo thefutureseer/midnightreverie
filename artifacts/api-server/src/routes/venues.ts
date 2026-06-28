@@ -10,6 +10,11 @@ import { requireHost } from "../middlewares/auth";
 
 const router: IRouter = Router();
 
+router.get("/venues", (req, res): void => {
+  const all = db.venues.listAll().map((v) => toVenuePublic(v));
+  res.json(all);
+});
+
 router.post("/venues", requireHost, (req, res): void => {
   const {
     venueName,

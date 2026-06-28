@@ -179,6 +179,19 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
 
   /venues:
+    get:
+      operationId: listVenues
+      tags: [venues]
+      summary: List all public venue listings
+      responses:
+        "200":
+          description: List of all venues
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VenuePublic"
     post:
       operationId: createVenue
       tags: [venues]

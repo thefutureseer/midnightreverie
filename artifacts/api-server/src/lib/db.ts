@@ -152,6 +152,9 @@ export const db = {
     findById(id: string): Venue | undefined {
       return venues.get(id);
     },
+    listAll(): Venue[] {
+      return Array.from(venues.values());
+    },
     listByHost(hostId: string): Venue[] {
       return Array.from(venues.values()).filter((v) => v.hostId === hostId);
     },

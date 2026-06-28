@@ -559,6 +559,83 @@ export function useGetHostDashboard<TData = Awaited<ReturnType<typeof getHostDas
 
 
 
+export const getListVenuesUrl = () => {
+
+
+
+
+  return `/api/venues`
+}
+
+/**
+ * @summary List all public venue listings
+ */
+export const listVenues = async ( options?: RequestInit): Promise<VenuePublic[]> => {
+
+  return customFetch<VenuePublic[]>(getListVenuesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListVenuesQueryKey = () => {
+    return [
+    `/api/venues`
+    ] as const;
+    }
+
+
+export const getListVenuesQueryOptions = <TData = Awaited<ReturnType<typeof listVenues>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVenues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListVenuesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listVenues>>> = ({ signal }) => listVenues({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listVenues>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListVenuesQueryResult = NonNullable<Awaited<ReturnType<typeof listVenues>>>
+export type ListVenuesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all public venue listings
+ */
+
+export function useListVenues<TData = Awaited<ReturnType<typeof listVenues>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listVenues>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListVenuesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getCreateVenueUrl = () => {
 
 

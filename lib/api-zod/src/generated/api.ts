@@ -144,6 +144,35 @@ export const GetHostDashboardResponse = zod.object({
 
 
 /**
+ * @summary List all public venue listings
+ */
+export const ListVenuesResponseItem = zod.object({
+  "id": zod.string(),
+  "hostId": zod.string(),
+  "venueName": zod.string(),
+  "capacitySeats": zod.number(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()).optional(),
+  "ticketPriceChargedByHost": zod.number(),
+  "performerName": zod.string().nullish(),
+  "showDate": zod.string().nullish(),
+  "showTime": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "createdAt": zod.string().optional(),
+  "ticketsSold": zod.number(),
+  "seatsRemaining": zod.number(),
+  "tierInfo": zod.object({
+  "tierLabel": zod.string(),
+  "currentPrice": zod.number(),
+  "ticketsSold": zod.number(),
+  "nextTierAt": zod.number().nullable(),
+  "discount": zod.number()
+})
+})
+export const ListVenuesResponse = zod.array(ListVenuesResponseItem)
+
+
+/**
  * @summary Create a new venue listing (host only)
  */
 
