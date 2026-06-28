@@ -6,10 +6,9 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  hasTicket: boolean;
-  isHost: boolean;
+export interface GuestStreamAccess {
+  sessionToken: string;
+  streamUrl: string;
+  streamType: string;
+  venueName: string;
 }

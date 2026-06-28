@@ -5,11 +5,10 @@
  * Virtual Stage Show — Watch Party & Venue Licensing API
  * OpenAPI spec version: 0.2.0
  */
+import type { User } from './user';
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  hasTicket: boolean;
-  isHost: boolean;
+export interface HostLicenseResponse {
+  success: boolean;
+  message: string;
+  user: User;
 }

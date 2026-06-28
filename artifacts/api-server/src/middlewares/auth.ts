@@ -31,3 +31,14 @@ export function requireAuth(req: Request, res: Response, next: NextFunction): vo
     res.status(401).json({ error: "Invalid or expired token" });
   }
 }
+
+export function requireHost(req: Request, res: Response, next: NextFunction): void {
+  requireAuth(req, res, () => {
+    const user = db.users.findById(req.userId!);
+    if (!user?.isHost) {
+      res.status(403).json({ error: "Host license required" });
+      return;
+    }
+    next();
+  });
+}

@@ -2,27 +2,25 @@ openapi: 3.1.0
 info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
-  version: 0.1.0
-  description: Virtual Stage Show API
+  version: 0.2.0
+  description: Virtual Stage Show — Watch Party & Venue Licensing API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
-    description: Health operations
   - name: auth
-    description: Authentication operations
   - name: tickets
-    description: Ticket operations
+  - name: hosts
+  - name: venues
   - name: stream
-    description: Stream operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -35,7 +33,6 @@ paths:
     post:
       operationId: signup
       tags: [auth]
-      summary: Register a new user
       requestBody:
         required: true
         content:
@@ -66,7 +63,6 @@ paths:
     post:
       operationId: login
       tags: [auth]
-      summary: Login
       requestBody:
         required: true
         content:
@@ -91,7 +87,6 @@ paths:
     get:
       operationId: getMe
       tags: [auth]
-      summary: Get current user profile
       security:
         - bearerAuth: []
       responses:
@@ -112,7 +107,7 @@ paths:
     post:
       operationId: mockTicketSuccess
       tags: [tickets]
-      summary: Simulate a successful ticket purchase
+      summary: Simulate a successful ticket purchase for main show
       security:
         - bearerAuth: []
       responses:
@@ -129,11 +124,166 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /hosts/license:
+    post:
+      operationId: purchaseHostLicense
+      tags: [hosts]
+      summary: Pay $15 licensing fee to become an approved host
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Host license granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostLicenseResponse"
+        "400":
+          description: Already a host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /hosts/dashboard:
+    get:
+      operationId: getHostDashboard
+      tags: [hosts]
+      summary: Get host dashboard data including venues and revenue
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Host dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HostDashboard"
+        "403":
+          description: Not a host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /venues:
+    post:
+      operationId: createVenue
+      tags: [venues]
+      summary: Create a new venue listing (host only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VenueInput"
+      responses:
+        "201":
+          description: Venue created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Venue"
+        "403":
+          description: Not a host
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /venues/{venueId}:
+    get:
+      operationId: getVenue
+      tags: [venues]
+      summary: Get venue details with ticket count and current tier price (public)
+      parameters:
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Venue details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VenuePublic"
+        "404":
+          description: Venue not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /venues/{venueId}/tickets:
+    post:
+      operationId: buyWatchPartyTicket
+      tags: [venues]
+      summary: Buy a watch party ticket for a venue (no account required)
+      parameters:
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WatchPartyTicketInput"
+      responses:
+        "201":
+          description: Ticket purchased
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WatchPartyTicketResponse"
+        "400":
+          description: Bad request or sold out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Venue not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email already has a ticket
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /stream/verify:
     get:
       operationId: verifyStream
       tags: [stream]
-      summary: Verify stream access and get stream URL
+      summary: Verify main show stream access (authenticated ticket holders)
       security:
         - bearerAuth: []
       responses:
@@ -156,6 +306,37 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /stream/verify-guest:
+    post:
+      operationId: verifyGuestStream
+      tags: [stream]
+      summary: Verify guest stream access by email and venueId
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GuestStreamInput"
+      responses:
+        "200":
+          description: Guest stream access granted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GuestStreamAccess"
+        "403":
+          description: No ticket found for this email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Venue not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
 components:
   securitySchemes:
     bearerAuth:
@@ -165,22 +346,21 @@ components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
     ErrorResponse:
       type: object
+      required: [error]
       properties:
         error:
           type: string
-      required:
-        - error
 
     User:
       type: object
+      required: [id, name, email, hasTicket, isHost]
       properties:
         id:
           type: string
@@ -190,25 +370,21 @@ components:
           type: string
         hasTicket:
           type: boolean
-      required:
-        - id
-        - name
-        - email
-        - hasTicket
+        isHost:
+          type: boolean
 
     AuthResponse:
       type: object
+      required: [token, user]
       properties:
         token:
           type: string
         user:
           $ref: "#/components/schemas/User"
-      required:
-        - token
-        - user
 
     SignupInput:
       type: object
+      required: [name, email, password]
       properties:
         name:
           type: string
@@ -218,24 +394,19 @@ components:
         password:
           type: string
           minLength: 6
-      required:
-        - name
-        - email
-        - password
 
     LoginInput:
       type: object
+      required: [email, password]
       properties:
         email:
           type: string
         password:
           type: string
-      required:
-        - email
-        - password
 
     TicketResponse:
       type: object
+      required: [success, message, user]
       properties:
         success:
           type: boolean
@@ -243,18 +414,228 @@ components:
           type: string
         user:
           $ref: "#/components/schemas/User"
-      required:
-        - success
-        - message
-        - user
+
+    HostLicenseResponse:
+      type: object
+      required: [success, message, user]
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    VenueRevenueSummary:
+      type: object
+      required: [venueId, venueName, ticketsSold, guestRevenue, platformCut]
+      properties:
+        venueId:
+          type: string
+        venueName:
+          type: string
+        ticketsSold:
+          type: integer
+        guestRevenue:
+          type: number
+        platformCut:
+          type: number
+
+    HostDashboard:
+      type: object
+      required: [user, venues, totalRevenue, platformRevenue]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        venues:
+          type: array
+          items:
+            $ref: "#/components/schemas/VenuePublic"
+        totalRevenue:
+          type: number
+        platformRevenue:
+          type: number
+        revenueSummaries:
+          type: array
+          items:
+            $ref: "#/components/schemas/VenueRevenueSummary"
+
+    VenueInput:
+      type: object
+      required: [venueName, capacitySeats, ticketPriceChargedByHost]
+      properties:
+        venueName:
+          type: string
+          minLength: 1
+        capacitySeats:
+          type: integer
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            type: string
+        ticketPriceChargedByHost:
+          type: number
+        performerName:
+          type: string
+        showDate:
+          type: string
+        showTime:
+          type: string
+        location:
+          type: string
+
+    Venue:
+      type: object
+      required: [id, hostId, venueName, capacitySeats, ticketPriceChargedByHost]
+      properties:
+        id:
+          type: string
+        hostId:
+          type: string
+        venueName:
+          type: string
+        capacitySeats:
+          type: integer
+        description:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        ticketPriceChargedByHost:
+          type: number
+        performerName:
+          type: ["string", "null"]
+        showDate:
+          type: ["string", "null"]
+        showTime:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TierInfo:
+      type: object
+      required: [tierLabel, currentPrice, ticketsSold, nextTierAt, discount]
+      properties:
+        tierLabel:
+          type: string
+        currentPrice:
+          type: number
+        ticketsSold:
+          type: integer
+        nextTierAt:
+          type: ["integer", "null"]
+        discount:
+          type: integer
+
+    VenuePublic:
+      type: object
+      required: [id, hostId, venueName, capacitySeats, ticketPriceChargedByHost, ticketsSold, seatsRemaining, tierInfo]
+      properties:
+        id:
+          type: string
+        hostId:
+          type: string
+        venueName:
+          type: string
+        capacitySeats:
+          type: integer
+        description:
+          type: ["string", "null"]
+        images:
+          type: array
+          items:
+            type: string
+        ticketPriceChargedByHost:
+          type: number
+        performerName:
+          type: ["string", "null"]
+        showDate:
+          type: ["string", "null"]
+        showTime:
+          type: ["string", "null"]
+        location:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        ticketsSold:
+          type: integer
+        seatsRemaining:
+          type: integer
+        tierInfo:
+          $ref: "#/components/schemas/TierInfo"
+
+    WatchPartyTicketInput:
+      type: object
+      required: [guestName, guestEmail]
+      properties:
+        guestName:
+          type: string
+          minLength: 1
+        guestEmail:
+          type: string
+
+    WatchPartyTicket:
+      type: object
+      required: [id, venueId, guestName, guestEmail, purchasedAtPrice, hasAccess]
+      properties:
+        id:
+          type: string
+        venueId:
+          type: string
+        guestName:
+          type: string
+        guestEmail:
+          type: string
+        purchasedAtPrice:
+          type: number
+        hasAccess:
+          type: boolean
+
+    WatchPartyTicketResponse:
+      type: object
+      required: [success, ticket, tierInfo, platformLog]
+      properties:
+        success:
+          type: boolean
+        ticket:
+          $ref: "#/components/schemas/WatchPartyTicket"
+        tierInfo:
+          $ref: "#/components/schemas/TierInfo"
+        platformLog:
+          type: string
+
+    GuestStreamInput:
+      type: object
+      required: [email, venueId]
+      properties:
+        email:
+          type: string
+        venueId:
+          type: string
+
+    GuestStreamAccess:
+      type: object
+      required: [sessionToken, streamUrl, streamType, venueName]
+      properties:
+        sessionToken:
+          type: string
+        streamUrl:
+          type: string
+        streamType:
+          type: string
+        venueName:
+          type: string
 
     StreamAccess:
       type: object
+      required: [url, type]
       properties:
         url:
           type: string
         type:
           type: string
-      required:
-        - url
-        - type

@@ -43,7 +43,7 @@ export default function LoginPage() {
         toast({ title: "Welcome back." });
       },
       onError: (err) => {
-        toast({ title: "Login failed", description: err.error, variant: "destructive" });
+        toast({ title: "Login failed", description: (err as any).data?.error || "Invalid credentials", variant: "destructive" });
       }
     });
   };

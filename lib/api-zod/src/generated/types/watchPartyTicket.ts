@@ -6,10 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface User {
+export interface WatchPartyTicket {
   id: string;
-  name: string;
-  email: string;
-  hasTicket: boolean;
-  isHost: boolean;
+  venueId: string;
+  guestName: string;
+  guestEmail: string;
+  purchasedAtPrice: number;
+  hasAccess: boolean;
 }

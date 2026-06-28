@@ -6,10 +6,10 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  hasTicket: boolean;
-  isHost: boolean;
+export interface VenueRevenueSummary {
+  venueId: string;
+  venueName: string;
+  ticketsSold: number;
+  guestRevenue: number;
+  platformCut: number;
 }

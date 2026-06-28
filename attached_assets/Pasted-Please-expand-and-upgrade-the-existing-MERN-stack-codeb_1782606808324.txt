@@ -1,0 +1,28 @@
+Please expand and upgrade the existing MERN stack codebase for "Midnight Reverie" to implement a Tiered-Discount Watch Party and Independent Venue Licensing system. 
+
+Retain the existing dark-themed styling, base UI design, and local mock/demo-mode architecture, but modify the schemas and routes to support the following business logic and features:
+
+1. DATABASE SCHEMA UPDATES (Mocked locally):
+- Update 'User' Schema: Keep authentication, but ensure it tracks if a user is a "Host".
+- Create 'Venue' Schema: { hostId (ref User), venueName, capacitySeats, description, images: [string placeholders], ticketPriceChargedByHost: number }
+- Create 'WatchPartyTicket' Schema: { venueId, guestName, guestEmail, purchasedAtPrice: number, hasAccess: boolean }
+
+2. HOST WORKFLOW & LICENSING LOGIC:
+- Create a dashboard route/view where a logged-in User can pay a flat $15.00 licensing fee (simulated via mock checkout) to become an approved Host.
+- Once licensed, allow the Host to create an independent "Venue" listing by inputting its name, custom guest ticket price, seat capacity, description, and mock image cards showing where it will be viewed.
+- Generate a unique shareable link for this venue (e.g., /venue/:venueId).
+
+3. MICRO-VENUE TICKET BUYING WITH TIERED DISCOUNTS:
+- When an unauthenticated guest visits a specific `/venue/:venueId` page, they must NOT be forced to create an account. They should only see a "Buy Ticket to this Watch Party" form asking for Name and Email.
+- Implement Tiered/Dynamic Pricing Math: As more guests buy tickets for a specific venue, the price per ticket drops based on volume brackets. 
+- Track total sales per venue. When a guest checks out, charge them the current calculated tier price.
+- Implement the Platform Revenue Split Formula: Ensure the backend logs that Midnight Reverie receives the initial $15 flat fee + 3% of all secondary guest ticket sales processed by that host.
+
+4. REAL-TIME PHYSICAL LIVE-STREAM INTEGRATION (Demo Mocked):
+- The stage show is a real-world physical production captured live by a camera feed. Update the Theater page to simulate a strict "Showtime Hard Wall" scheduled for Saturday, July 19, 2026, at 8:00 PM EST.
+- Before showtime, display a counting-down "Lobby" interface showing pictures of the physical theater stage.
+- At showtime, transition the player to stream a live-simulated HLS/M3U8 feed or video stream placeholder.
+- Guest Access Gate: Guests access the stream by typing the email they used during checkout. The backend route `POST /api/stream/verify-guest` validates that their email exists in the 'WatchPartyTicket' collection for that active venue and issues a temporary session token to unlock the video player.
+
+5. SEED DATA UPDATES:
+- Update the startup seed script to include an active, pre-configured Host venue with 3 guest tickets already sold, so I can immediately view the tiered progress bar and test guest access gating out-of-the-box.

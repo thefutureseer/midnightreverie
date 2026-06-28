@@ -6,10 +6,11 @@
  * OpenAPI spec version: 0.2.0
  */
 
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  hasTicket: boolean;
-  isHost: boolean;
+export interface TierInfo {
+  tierLabel: string;
+  currentPrice: number;
+  ticketsSold: number;
+  /** @nullable */
+  nextTierAt: number | null;
+  discount: number;
 }

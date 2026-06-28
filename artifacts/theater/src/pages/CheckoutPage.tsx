@@ -49,7 +49,7 @@ export default function CheckoutPage() {
         setLocation("/theater");
       },
       onError: (err) => {
-        toast({ title: "Payment Failed", description: err.error || "An error occurred", variant: "destructive" });
+        toast({ title: "Payment Failed", description: (err as any).data?.error || "An error occurred", variant: "destructive" });
       }
     });
   };

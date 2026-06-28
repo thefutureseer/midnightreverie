@@ -43,7 +43,7 @@ export default function SignupPage() {
         toast({ title: "Welcome to Midnight Reverie." });
       },
       onError: (err) => {
-        toast({ title: "Registration failed", description: err.error, variant: "destructive" });
+        toast({ title: "Registration failed", description: (err as any).data?.error || "Registration failed", variant: "destructive" });
       }
     });
   };

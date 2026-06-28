@@ -1,0 +1,2 @@
+- [TanStack Query v5 queryKey rule](tanstack-query-v5-querykey.md) — `queryKey` is required whenever `enabled` is passed to query options in this project's generated hooks.
+- [ErrorType data unwrap pattern](errortype-data-unwrap.md) — orval ErrorType throws with `.data.error`, not `.error` directly; use `(err as any).data?.error`.

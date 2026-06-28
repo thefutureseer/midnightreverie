@@ -9,6 +9,8 @@ import LoginPage from "@/pages/LoginPage";
 import SignupPage from "@/pages/SignupPage";
 import CheckoutPage from "@/pages/CheckoutPage";
 import TheaterPage from "@/pages/TheaterPage";
+import HostDashboardPage from "@/pages/HostDashboardPage";
+import VenuePage from "@/pages/VenuePage";
 import { useEffect } from "react";
 
 const queryClient = new QueryClient();
@@ -21,6 +23,8 @@ function Router() {
       <Route path="/signup" component={SignupPage} />
       <Route path="/checkout" component={CheckoutPage} />
       <Route path="/theater" component={TheaterPage} />
+      <Route path="/dashboard" component={HostDashboardPage} />
+      <Route path="/venue/:venueId" component={VenuePage} />
       <Route component={NotFound} />
     </Switch>
   );
@@ -28,8 +32,7 @@ function Router() {
 
 function App() {
   useEffect(() => {
-    // Ensure dark mode is strictly enforced as per requirement
-    document.documentElement.classList.add('dark');
+    document.documentElement.classList.add("dark");
   }, []);
 
   return (
