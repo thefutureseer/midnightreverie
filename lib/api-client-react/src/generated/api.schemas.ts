@@ -68,6 +68,16 @@ export interface TierInfo {
   discount: number;
 }
 
+export type VenuePublicVirtualSalesStatus = typeof VenuePublicVirtualSalesStatus[keyof typeof VenuePublicVirtualSalesStatus];
+
+
+export const VenuePublicVirtualSalesStatus = {
+  Locked: 'Locked',
+  WaitlistOnly: 'WaitlistOnly',
+  Open: 'Open',
+  Closed: 'Closed',
+} as const;
+
 export interface VenuePublic {
   id: string;
   hostId: string;
@@ -89,6 +99,10 @@ export interface VenuePublic {
   ticketsSold: number;
   seatsRemaining: number;
   tierInfo: TierInfo;
+  totalPhysicalSeats: number;
+  physicalSeatsSold: number;
+  virtualSalesStatus: VenuePublicVirtualSalesStatus;
+  virtualWaitlistCount: number;
 }
 
 export interface HostDashboard {
@@ -97,6 +111,23 @@ export interface HostDashboard {
   totalRevenue: number;
   platformRevenue: number;
   revenueSummaries?: VenueRevenueSummary[];
+}
+
+export interface WaitlistJoinInput {
+  email: string;
+}
+
+export interface WaitlistJoinResponse {
+  success: boolean;
+  alreadyJoined: boolean;
+  waitlistCount: number;
+  message: string;
+}
+
+export interface PhysicalTicketSaleResponse {
+  venue: VenuePublic;
+  message: string;
+  soldOut: boolean;
 }
 
 export interface VenueInput {
@@ -110,6 +141,8 @@ export interface VenueInput {
   showDate?: string;
   showTime?: string;
   location?: string;
+  /** Number of physical seats at the venue. When set, virtual sales start Locked until physical sells out. */
+  totalPhysicalSeats?: number;
 }
 
 export interface Venue {

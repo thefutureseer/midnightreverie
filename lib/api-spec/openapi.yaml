@@ -249,6 +249,74 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /venues/{venueId}/physical-tickets:
+    post:
+      operationId: sellPhysicalTicket
+      tags: [venues]
+      summary: Record a physical ticket sale — auto-opens virtual sales when sold out (demo/admin)
+      parameters:
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Physical ticket sold
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhysicalTicketSaleResponse"
+        "400":
+          description: No physical seats configured or already sold out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Venue not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /venues/{venueId}/waitlist:
+    post:
+      operationId: joinVenueWaitlist
+      tags: [venues]
+      summary: Join the virtual ticket waitlist for a locked venue
+      parameters:
+        - name: venueId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaitlistJoinInput"
+      responses:
+        "200":
+          description: Joined waitlist
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaitlistJoinResponse"
+        "400":
+          description: Waitlist not available or missing email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Venue not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
   /venues/{venueId}/tickets:
     post:
       operationId: buyWatchPartyTicket
@@ -473,6 +541,38 @@ components:
           items:
             $ref: "#/components/schemas/VenueRevenueSummary"
 
+    WaitlistJoinInput:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+
+    WaitlistJoinResponse:
+      type: object
+      required: [success, alreadyJoined, waitlistCount, message]
+      properties:
+        success:
+          type: boolean
+        alreadyJoined:
+          type: boolean
+        waitlistCount:
+          type: integer
+        message:
+          type: string
+
+    PhysicalTicketSaleResponse:
+      type: object
+      required: [venue, message, soldOut]
+      properties:
+        venue:
+          $ref: "#/components/schemas/VenuePublic"
+        message:
+          type: string
+        soldOut:
+          type: boolean
+
     VenueInput:
       type: object
       required: [venueName, capacitySeats, ticketPriceChargedByHost]
@@ -498,6 +598,9 @@ components:
           type: string
         location:
           type: string
+        totalPhysicalSeats:
+          type: integer
+          description: Number of physical seats at the venue. When set, virtual sales start Locked until physical sells out.
 
     Venue:
       type: object
@@ -547,7 +650,7 @@ components:
 
     VenuePublic:
       type: object
-      required: [id, hostId, venueName, capacitySeats, ticketPriceChargedByHost, ticketsSold, seatsRemaining, tierInfo]
+      required: [id, hostId, venueName, capacitySeats, ticketPriceChargedByHost, ticketsSold, seatsRemaining, tierInfo, totalPhysicalSeats, physicalSeatsSold, virtualSalesStatus, virtualWaitlistCount]
       properties:
         id:
           type: string
@@ -581,6 +684,15 @@ components:
           type: integer
         tierInfo:
           $ref: "#/components/schemas/TierInfo"
+        totalPhysicalSeats:
+          type: integer
+        physicalSeatsSold:
+          type: integer
+        virtualSalesStatus:
+          type: string
+          enum: [Locked, WaitlistOnly, Open, Closed]
+        virtualWaitlistCount:
+          type: integer
 
     WatchPartyTicketInput:
       type: object

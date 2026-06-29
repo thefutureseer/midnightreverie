@@ -12,6 +12,8 @@ export interface User {
   isHost: boolean;
 }
 
+export type VirtualSalesStatus = "Locked" | "WaitlistOnly" | "Open" | "Closed";
+
 export interface Venue {
   id: string;
   hostId: string;
@@ -25,6 +27,11 @@ export interface Venue {
   showTime: string | null;
   location: string | null;
   createdAt: string;
+  // Sell-Out Trigger
+  totalPhysicalSeats: number;
+  physicalSeatsSold: number;
+  virtualSalesStatus: VirtualSalesStatus;
+  virtualWaitlist: string[]; // email addresses
 }
 
 export interface WatchPartyTicket {
@@ -169,6 +176,7 @@ export const db = {
       showDate?: string | null;
       showTime?: string | null;
       location?: string | null;
+      totalPhysicalSeats?: number;
     }): Venue {
       const venue: Venue = {
         id: randomUUID(),
@@ -183,10 +191,31 @@ export const db = {
         showTime: data.showTime ?? null,
         location: data.location ?? null,
         createdAt: new Date().toISOString(),
+        totalPhysicalSeats: data.totalPhysicalSeats ?? 0,
+        physicalSeatsSold: 0,
+        virtualSalesStatus: data.totalPhysicalSeats ? "Locked" : "Open",
+        virtualWaitlist: [],
       };
       venues.set(venue.id, venue);
       ticketsByVenue.set(venue.id, []);
       return venue;
+    },
+    sellPhysicalTicket(id: string): Venue | undefined {
+      const venue = venues.get(id);
+      if (!venue) return undefined;
+      venue.physicalSeatsSold = Math.min(venue.physicalSeatsSold + 1, venue.totalPhysicalSeats);
+      if (venue.totalPhysicalSeats > 0 && venue.physicalSeatsSold >= venue.totalPhysicalSeats) {
+        venue.virtualSalesStatus = "Open";
+      }
+      return venue;
+    },
+    joinWaitlist(id: string, email: string): { alreadyJoined: boolean } | undefined {
+      const venue = venues.get(id);
+      if (!venue) return undefined;
+      const normalized = email.toLowerCase();
+      if (venue.virtualWaitlist.includes(normalized)) return { alreadyJoined: true };
+      venue.virtualWaitlist.push(normalized);
+      return { alreadyJoined: false };
     },
   },
 
@@ -293,6 +322,10 @@ export function toVenuePublic(venue: Venue): object {
     ticketsSold,
     seatsRemaining,
     tierInfo,
+    totalPhysicalSeats: venue.totalPhysicalSeats,
+    physicalSeatsSold: venue.physicalSeatsSold,
+    virtualSalesStatus: venue.virtualSalesStatus,
+    virtualWaitlistCount: venue.virtualWaitlist.length,
   };
 }
 
@@ -342,6 +375,7 @@ async function seed() {
     showDate: "Thursday, August 28, 2026",
     showTime: "7:00 PM PST",
     location: "Bob Hope Theatre, Stockton, CA",
+    totalPhysicalSeats: 1200, // Bob Hope Theatre capacity
   });
 
   // 3 pre-sold tickets (puts us at Tier 1, approaching Tier 2 threshold)

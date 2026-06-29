@@ -129,7 +129,11 @@ export const GetHostDashboardResponse = zod.object({
   "ticketsSold": zod.number(),
   "nextTierAt": zod.number().nullable(),
   "discount": zod.number()
-})
+}),
+  "totalPhysicalSeats": zod.number(),
+  "physicalSeatsSold": zod.number(),
+  "virtualSalesStatus": zod.enum(['Locked', 'WaitlistOnly', 'Open', 'Closed']),
+  "virtualWaitlistCount": zod.number()
 })),
   "totalRevenue": zod.number(),
   "platformRevenue": zod.number(),
@@ -167,7 +171,11 @@ export const ListVenuesResponseItem = zod.object({
   "ticketsSold": zod.number(),
   "nextTierAt": zod.number().nullable(),
   "discount": zod.number()
-})
+}),
+  "totalPhysicalSeats": zod.number(),
+  "physicalSeatsSold": zod.number(),
+  "virtualSalesStatus": zod.enum(['Locked', 'WaitlistOnly', 'Open', 'Closed']),
+  "virtualWaitlistCount": zod.number()
 })
 export const ListVenuesResponse = zod.array(ListVenuesResponseItem)
 
@@ -187,7 +195,8 @@ export const CreateVenueBody = zod.object({
   "performerName": zod.string().optional(),
   "showDate": zod.string().optional(),
   "showTime": zod.string().optional(),
-  "location": zod.string().optional()
+  "location": zod.string().optional(),
+  "totalPhysicalSeats": zod.number().optional().describe('Number of physical seats at the venue. When set, virtual sales start Locked until physical sells out.')
 })
 
 export const CreateVenueResponse = zod.object({
@@ -234,7 +243,70 @@ export const GetVenueResponse = zod.object({
   "ticketsSold": zod.number(),
   "nextTierAt": zod.number().nullable(),
   "discount": zod.number()
+}),
+  "totalPhysicalSeats": zod.number(),
+  "physicalSeatsSold": zod.number(),
+  "virtualSalesStatus": zod.enum(['Locked', 'WaitlistOnly', 'Open', 'Closed']),
+  "virtualWaitlistCount": zod.number()
 })
+
+
+/**
+ * @summary Record a physical ticket sale — auto-opens virtual sales when sold out (demo/admin)
+ */
+export const SellPhysicalTicketParams = zod.object({
+  "venueId": zod.coerce.string()
+})
+
+export const SellPhysicalTicketResponse = zod.object({
+  "venue": zod.object({
+  "id": zod.string(),
+  "hostId": zod.string(),
+  "venueName": zod.string(),
+  "capacitySeats": zod.number(),
+  "description": zod.string().nullish(),
+  "images": zod.array(zod.string()).optional(),
+  "ticketPriceChargedByHost": zod.number(),
+  "performerName": zod.string().nullish(),
+  "showDate": zod.string().nullish(),
+  "showTime": zod.string().nullish(),
+  "location": zod.string().nullish(),
+  "createdAt": zod.string().optional(),
+  "ticketsSold": zod.number(),
+  "seatsRemaining": zod.number(),
+  "tierInfo": zod.object({
+  "tierLabel": zod.string(),
+  "currentPrice": zod.number(),
+  "ticketsSold": zod.number(),
+  "nextTierAt": zod.number().nullable(),
+  "discount": zod.number()
+}),
+  "totalPhysicalSeats": zod.number(),
+  "physicalSeatsSold": zod.number(),
+  "virtualSalesStatus": zod.enum(['Locked', 'WaitlistOnly', 'Open', 'Closed']),
+  "virtualWaitlistCount": zod.number()
+}),
+  "message": zod.string(),
+  "soldOut": zod.boolean()
+})
+
+
+/**
+ * @summary Join the virtual ticket waitlist for a locked venue
+ */
+export const JoinVenueWaitlistParams = zod.object({
+  "venueId": zod.coerce.string()
+})
+
+export const JoinVenueWaitlistBody = zod.object({
+  "email": zod.string().email()
+})
+
+export const JoinVenueWaitlistResponse = zod.object({
+  "success": zod.boolean(),
+  "alreadyJoined": zod.boolean(),
+  "waitlistCount": zod.number(),
+  "message": zod.string()
 })
 
 

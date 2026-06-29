@@ -17,4 +17,6 @@ export interface VenueInput {
   showDate?: string;
   showTime?: string;
   location?: string;
+  /** Number of physical seats at the venue. When set, virtual sales start Locked until physical sells out. */
+  totalPhysicalSeats?: number;
 }

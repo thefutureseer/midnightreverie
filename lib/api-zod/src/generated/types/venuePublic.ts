@@ -6,6 +6,7 @@
  * OpenAPI spec version: 0.2.0
  */
 import type { TierInfo } from './tierInfo';
+import type { VenuePublicVirtualSalesStatus } from './venuePublicVirtualSalesStatus';
 
 export interface VenuePublic {
   id: string;
@@ -28,4 +29,8 @@ export interface VenuePublic {
   ticketsSold: number;
   seatsRemaining: number;
   tierInfo: TierInfo;
+  totalPhysicalSeats: number;
+  physicalSeatsSold: number;
+  virtualSalesStatus: VenuePublicVirtualSalesStatus;
+  virtualWaitlistCount: number;
 }

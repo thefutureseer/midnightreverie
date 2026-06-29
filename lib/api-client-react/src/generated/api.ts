@@ -28,6 +28,7 @@ import type {
   HostDashboard,
   HostLicenseResponse,
   LoginInput,
+  PhysicalTicketSaleResponse,
   SignupInput,
   StreamAccess,
   TicketResponse,
@@ -35,6 +36,8 @@ import type {
   Venue,
   VenueInput,
   VenuePublic,
+  WaitlistJoinInput,
+  WaitlistJoinResponse,
   WatchPartyTicketInput,
   WatchPartyTicketResponse
 } from './api.schemas';
@@ -782,6 +785,147 @@ export function useGetVenue<TData = Awaited<ReturnType<typeof getVenue>>, TError
 
 
 
+
+export const getSellPhysicalTicketUrl = (venueId: string,) => {
+
+
+
+
+  return `/api/venues/${venueId}/physical-tickets`
+}
+
+/**
+ * @summary Record a physical ticket sale — auto-opens virtual sales when sold out (demo/admin)
+ */
+export const sellPhysicalTicket = async (venueId: string, options?: RequestInit): Promise<PhysicalTicketSaleResponse> => {
+
+  return customFetch<PhysicalTicketSaleResponse>(getSellPhysicalTicketUrl(venueId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSellPhysicalTicketMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sellPhysicalTicket>>, TError,{venueId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sellPhysicalTicket>>, TError,{venueId: string}, TContext> => {
+
+const mutationKey = ['sellPhysicalTicket'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sellPhysicalTicket>>, {venueId: string}> = (props) => {
+          const {venueId} = props ?? {};
+
+          return  sellPhysicalTicket(venueId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SellPhysicalTicketMutationResult = NonNullable<Awaited<ReturnType<typeof sellPhysicalTicket>>>
+
+    export type SellPhysicalTicketMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Record a physical ticket sale — auto-opens virtual sales when sold out (demo/admin)
+ */
+export const useSellPhysicalTicket = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sellPhysicalTicket>>, TError,{venueId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sellPhysicalTicket>>,
+        TError,
+        {venueId: string},
+        TContext
+      > => {
+      return useMutation(getSellPhysicalTicketMutationOptions(options));
+    }
+
+export const getJoinVenueWaitlistUrl = (venueId: string,) => {
+
+
+
+
+  return `/api/venues/${venueId}/waitlist`
+}
+
+/**
+ * @summary Join the virtual ticket waitlist for a locked venue
+ */
+export const joinVenueWaitlist = async (venueId: string,
+    waitlistJoinInput: WaitlistJoinInput, options?: RequestInit): Promise<WaitlistJoinResponse> => {
+
+  return customFetch<WaitlistJoinResponse>(getJoinVenueWaitlistUrl(venueId),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(waitlistJoinInput)
+  }
+);}
+
+
+
+
+export const getJoinVenueWaitlistMutationOptions = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinVenueWaitlist>>, TError,{venueId: string;data: BodyType<WaitlistJoinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof joinVenueWaitlist>>, TError,{venueId: string;data: BodyType<WaitlistJoinInput>}, TContext> => {
+
+const mutationKey = ['joinVenueWaitlist'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof joinVenueWaitlist>>, {venueId: string;data: BodyType<WaitlistJoinInput>}> = (props) => {
+          const {venueId,data} = props ?? {};
+
+          return  joinVenueWaitlist(venueId,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type JoinVenueWaitlistMutationResult = NonNullable<Awaited<ReturnType<typeof joinVenueWaitlist>>>
+    export type JoinVenueWaitlistMutationBody = BodyType<WaitlistJoinInput>
+    export type JoinVenueWaitlistMutationError = ErrorType<ErrorResponse>
+
+    /**
+ * @summary Join the virtual ticket waitlist for a locked venue
+ */
+export const useJoinVenueWaitlist = <TError = ErrorType<ErrorResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof joinVenueWaitlist>>, TError,{venueId: string;data: BodyType<WaitlistJoinInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof joinVenueWaitlist>>,
+        TError,
+        {venueId: string;data: BodyType<WaitlistJoinInput>},
+        TContext
+      > => {
+      return useMutation(getJoinVenueWaitlistMutationOptions(options));
+    }
 
 export const getBuyWatchPartyTicketUrl = (venueId: string,) => {
 

@@ -26,6 +26,7 @@ router.post("/venues", requireHost, (req, res): void => {
     showDate,
     showTime,
     location,
+    totalPhysicalSeats,
   } = req.body ?? {};
 
   if (!venueName || !capacitySeats || !ticketPriceChargedByHost) {
@@ -44,6 +45,7 @@ router.post("/venues", requireHost, (req, res): void => {
     showDate: showDate ?? null,
     showTime: showTime ?? null,
     location: location ?? null,
+    totalPhysicalSeats: totalPhysicalSeats ? Number(totalPhysicalSeats) : 0,
   });
 
   req.log.info({ venueId: venue.id, hostId: req.userId }, "Venue created");
@@ -64,6 +66,86 @@ router.get("/venues/:venueId", (req, res): void => {
   res.json(toVenuePublic(venue));
 });
 
+// ── Sell-Out Trigger: physical ticket sale ───────────────────────────────────
+
+router.post("/venues/:venueId/physical-tickets", (req, res): void => {
+  const raw = Array.isArray(req.params.venueId)
+    ? req.params.venueId[0]
+    : req.params.venueId;
+
+  const venue = db.venues.findById(raw);
+  if (!venue) {
+    res.status(404).json({ error: "Venue not found" });
+    return;
+  }
+
+  if (venue.totalPhysicalSeats === 0) {
+    res.status(400).json({ error: "This venue has no physical seats configured" });
+    return;
+  }
+
+  if (venue.physicalSeatsSold >= venue.totalPhysicalSeats) {
+    res.status(400).json({ error: "Physical venue is already sold out" });
+    return;
+  }
+
+  const updated = db.venues.sellPhysicalTicket(venue.id)!;
+  const soldOut = updated.physicalSeatsSold >= updated.totalPhysicalSeats;
+
+  req.log.info(
+    { venueId: venue.id, physicalSeatsSold: updated.physicalSeatsSold, virtualSalesStatus: updated.virtualSalesStatus },
+    soldOut ? "Physical venue sold out — virtual sales now Open" : "Physical ticket sold"
+  );
+
+  res.json({
+    venue: toVenuePublic(updated),
+    message: soldOut
+      ? "Physical venue is sold out — virtual ticket sales are now OPEN!"
+      : `Physical seat sold. ${updated.totalPhysicalSeats - updated.physicalSeatsSold} remaining until virtual sales open.`,
+    soldOut,
+  });
+});
+
+// ── Sell-Out Trigger: join virtual waitlist ──────────────────────────────────
+
+router.post("/venues/:venueId/waitlist", (req, res): void => {
+  const raw = Array.isArray(req.params.venueId)
+    ? req.params.venueId[0]
+    : req.params.venueId;
+
+  const venue = db.venues.findById(raw);
+  if (!venue) {
+    res.status(404).json({ error: "Venue not found" });
+    return;
+  }
+
+  if (!["Locked", "WaitlistOnly"].includes(venue.virtualSalesStatus)) {
+    res.status(400).json({ error: "Waitlist is not available — virtual tickets are already open or closed" });
+    return;
+  }
+
+  const { email } = req.body ?? {};
+  if (!email || typeof email !== "string") {
+    res.status(400).json({ error: "email is required" });
+    return;
+  }
+
+  const result = db.venues.joinWaitlist(venue.id, email)!;
+
+  req.log.info({ venueId: venue.id, email, alreadyJoined: result.alreadyJoined }, "Waitlist join");
+
+  res.json({
+    success: true,
+    alreadyJoined: result.alreadyJoined,
+    waitlistCount: venue.virtualWaitlist.length,
+    message: result.alreadyJoined
+      ? "You are already on the waitlist. We'll notify you when virtual tickets open."
+      : "You've been added to the waitlist! We'll notify you when virtual tickets open.",
+  });
+});
+
+// ── Buy a virtual (watch party) ticket ──────────────────────────────────────
+
 router.post("/venues/:venueId/tickets", (req, res): void => {
   const raw = Array.isArray(req.params.venueId)
     ? req.params.venueId[0]
@@ -75,13 +157,23 @@ router.post("/venues/:venueId/tickets", (req, res): void => {
     return;
   }
 
+  // Sell-Out Trigger gate
+  if (venue.virtualSalesStatus !== "Open") {
+    const statusMessages: Record<string, string> = {
+      Locked: "Virtual ticket sales are locked until the physical venue sells out.",
+      WaitlistOnly: "Virtual ticket sales are not yet open. Join the waitlist to be notified.",
+      Closed: "Virtual ticket sales for this venue are closed.",
+    };
+    res.status(403).json({ error: statusMessages[venue.virtualSalesStatus] ?? "Virtual ticket sales are not available." });
+    return;
+  }
+
   const { guestName, guestEmail } = req.body ?? {};
   if (!guestName || !guestEmail) {
     res.status(400).json({ error: "guestName and guestEmail are required" });
     return;
   }
 
-  // Check for duplicate
   const existing = db.watchPartyTickets.findByVenueAndEmail(venue.id, guestEmail);
   if (existing) {
     res.status(409).json({ error: "A ticket for this email already exists for this venue" });
@@ -90,7 +182,6 @@ router.post("/venues/:venueId/tickets", (req, res): void => {
 
   const ticketsSold = db.watchPartyTickets.countByVenue(venue.id);
 
-  // Check capacity
   if (ticketsSold >= venue.capacitySeats) {
     res.status(400).json({ error: "This venue is sold out" });
     return;
@@ -119,7 +210,6 @@ router.post("/venues/:venueId/tickets", (req, res): void => {
 
   req.log.info({ venueId: venue.id, guestEmail, price: ticket.purchasedAtPrice, platformCut }, "Watch party ticket sold");
 
-  // Return updated tier after purchase
   const updatedTier = calculateTier(
     venue.ticketPriceChargedByHost,
     db.watchPartyTickets.countByVenue(venue.id)
