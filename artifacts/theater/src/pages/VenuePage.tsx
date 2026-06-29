@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useParams, Link } from "wouter";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   useGetVenue,
   useBuyWatchPartyTicket,
@@ -79,6 +80,7 @@ export default function VenuePage() {
   const params = useParams<{ venueId: string }>();
   const venueId = params.venueId || "";
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: venue, isLoading: venueLoading, error: venueError } = useGetVenue(venueId, {
     query: {
@@ -209,6 +211,7 @@ export default function VenuePage() {
     ? Math.min(100, (venue.physicalSeatsSold / venue.totalPhysicalSeats) * 100)
     : 0;
   const physicalRemaining = venue.totalPhysicalSeats - venue.physicalSeatsSold;
+  const isVenueHost = !!user && user.id === venue.hostId;
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center p-4 md:p-8 relative">
@@ -299,8 +302,8 @@ export default function VenuePage() {
                 <Progress value={physicalProgress} className="h-2" />
               </div>
 
-              {/* Demo control — simulate physical ticket sales */}
-              {status !== "Open" && status !== "Closed" && (
+              {/* Demo control — only visible to the venue's own host */}
+              {isVenueHost && status !== "Open" && status !== "Closed" && (
                 <div className="border-t border-border/30 pt-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-0.5">Demo Panel</p>

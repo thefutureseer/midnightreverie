@@ -67,8 +67,9 @@ router.get("/venues/:venueId", (req, res): void => {
 });
 
 // ── Sell-Out Trigger: physical ticket sale ───────────────────────────────────
+// Requires the caller to be the venue's host (JWT-authenticated).
 
-router.post("/venues/:venueId/physical-tickets", (req, res): void => {
+router.post("/venues/:venueId/physical-tickets", requireHost, (req, res): void => {
   const raw = Array.isArray(req.params.venueId)
     ? req.params.venueId[0]
     : req.params.venueId;
@@ -76,6 +77,12 @@ router.post("/venues/:venueId/physical-tickets", (req, res): void => {
   const venue = db.venues.findById(raw);
   if (!venue) {
     res.status(404).json({ error: "Venue not found" });
+    return;
+  }
+
+  // Only the venue's own host may record physical sales
+  if (venue.hostId !== req.userId) {
+    res.status(403).json({ error: "You do not own this venue" });
     return;
   }
 
