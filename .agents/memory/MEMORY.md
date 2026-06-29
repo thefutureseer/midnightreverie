@@ -1,2 +1,2 @@
-- [TanStack Query v5 queryKey rule](tanstack-query-v5-querykey.md) — `queryKey` is required whenever `enabled` is passed to query options in this project's generated hooks.
-- [ErrorType data unwrap pattern](errortype-data-unwrap.md) — orval ErrorType throws with `.data.error`, not `.error` directly; use `(err as any).data?.error`.
+- [Playwright on Replit NixOS](playwright-nixos.md) — bundled Chromium missing libglib; use Nix chromium package + executablePath
+- [Playwright test quirks](playwright-test-quirks.md) — shadcn CardTitle is a div not heading; getByText is case-insensitive substring by default
